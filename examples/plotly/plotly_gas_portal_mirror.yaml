@@ -1,0 +1,227 @@
+type: custom:plotly-graph
+title: M.U.D. Gas Year-over-Year (Portal Mirror)
+grid_options:
+  columns: full
+hours_to_show: 1s
+raw_plotly_config: true
+entities:
+  - entity: sensor.mud_utilities_test_gas_consumption
+    name: '2024'
+    type: bar
+    showlegend: true
+    x: |-
+      $ex {
+        const months = [
+          "January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"
+        ];
+
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2024-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p =>
+          months[
+            Number(p.billing_period.split("-")[1]) - 1
+          ]
+        );
+      }
+    'y': |-
+      $ex {
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2024-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p =>
+          Number(p.consumption)
+        );
+      }
+    customdata: |-
+      $ex {
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2024-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p => [
+          p.billing_period,
+          p.start,
+          p.end,
+          p.unit
+        ]);
+      }
+    hovertemplate: >-
+      <b>%{customdata[0]}</b><br> Usage: %{y:.1f} %{customdata[3]}<br> Billing
+      cycle: %{customdata[1]} → %{customdata[2]} <extra>2024</extra>
+  - entity: sensor.mud_utilities_test_gas_consumption
+    name: '2025'
+    type: bar
+    showlegend: true
+    x: |-
+      $ex {
+        const months = [
+          "January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"
+        ];
+
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2025-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p =>
+          months[
+            Number(p.billing_period.split("-")[1]) - 1
+          ]
+        );
+      }
+    'y': |-
+      $ex {
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2025-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p =>
+          Number(p.consumption)
+        );
+      }
+    customdata: |-
+      $ex {
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2025-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p => [
+          p.billing_period,
+          p.start,
+          p.end,
+          p.unit
+        ]);
+      }
+    hovertemplate: >-
+      <b>%{customdata[0]}</b><br> Usage: %{y:.1f} %{customdata[3]}<br> Billing
+      cycle: %{customdata[1]} → %{customdata[2]} <extra>2025</extra>
+  - entity: sensor.mud_utilities_test_gas_consumption
+    name: '2026'
+    type: bar
+    showlegend: true
+    x: |-
+      $ex {
+        const months = [
+          "January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"
+        ];
+
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2026-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p =>
+          months[
+            Number(p.billing_period.split("-")[1]) - 1
+          ]
+        );
+      }
+    'y': |-
+      $ex {
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2026-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p =>
+          Number(p.consumption)
+        );
+      }
+    customdata: |-
+      $ex {
+        const history = meta.billing_history;
+
+        const records = history.filter((p, i, all) =>
+          p.billing_period.startsWith("2026-") &&
+          all.map(q => q.billing_period)
+             .lastIndexOf(p.billing_period) === i
+        );
+
+        return records.map(p => [
+          p.billing_period,
+          p.start,
+          p.end,
+          p.unit
+        ]);
+      }
+    hovertemplate: >-
+      <b>%{customdata[0]}</b><br> Usage: %{y:.1f} %{customdata[3]}<br> Billing
+      cycle: %{customdata[1]} → %{customdata[2]} <extra>2026</extra>
+layout:
+  height: 440
+  barmode: group
+  bargap: 0.18
+  bargroupgap: 0.06
+  margin:
+    t: 30
+    l: 60
+    r: 25
+    b: 65
+  legend:
+    orientation: h
+    x: 0
+    y: 1.08
+  xaxis:
+    type: category
+    categoryorder: array
+    categoryarray:
+      - January
+      - February
+      - March
+      - April
+      - May
+      - June
+      - July
+      - August
+      - September
+      - October
+      - November
+      - December
+    tickangle: 0
+    title:
+      text: M.U.D. billing month
+  yaxis:
+    rangemode: tozero
+    title:
+      text: TH
+  hovermode: closest
+config:
+  displayModeBar: false

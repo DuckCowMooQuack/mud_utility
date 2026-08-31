@@ -57,6 +57,12 @@ You need:
 
 The contract IDs are visible in your M.U.D. account. They are not included in this repository and must be entered by each user during setup.
 
+## Plotly Examples
+
+Optional Plotly Graph Card examples are available in `examples/plotly`.
+
+These cards use the `billing_history` sensor attribute exposed by this integration and require the separate Plotly Graph Card custom card. The examples use likely test entity IDs such as `sensor.mud_utilities_test_gas_consumption` and `sensor.mud_utilities_test_water_consumption`; adjust them to match the entity IDs created in your Home Assistant instance.
+
 ## Privacy
 
 This integration stores your M.U.D. username, password, and contract IDs in Home Assistant's config entry storage. Do not share diagnostics or configuration files that contain those values.

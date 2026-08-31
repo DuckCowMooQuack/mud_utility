@@ -1,0 +1,876 @@
+type: custom:plotly-graph
+grid_options:
+  columns: full
+hours_to_show: 1s
+raw_plotly_config: true
+entities:
+  - entity: sensor.mud_utilities_test_gas_consumption
+    name: '2024'
+    type: bar
+    showlegend: true
+    x: |-
+      $ex {
+        const months = [
+          "January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"
+        ];
+
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantMonth = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+
+          const counts = {};
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          if (winners.length === 1) {
+            return winners[0];
+          }
+
+          const midpoint =
+            new Date(
+              (start.getTime() + end.getTime()) / 2
+            );
+
+          const midpointKey = monthKey(midpoint);
+
+          return winners.includes(midpointKey)
+            ? midpointKey
+            : winners[0];
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const key = dominantMonth(p);
+
+          if (!key.startsWith("2024-")) {
+            continue;
+          }
+
+          const item =
+            grouped.get(key) || {
+              consumption: 0,
+              records: []
+            };
+
+          item.consumption +=
+            Number(p.consumption);
+
+          item.records.push(p);
+
+          grouped.set(key, item);
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key]) =>
+            months[Number(key.split("-")[1]) - 1]
+          );
+      }
+    'y': |-
+      $ex {
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantMonth = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+
+          const counts = {};
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          if (winners.length === 1) {
+            return winners[0];
+          }
+
+          const midpoint =
+            new Date(
+              (start.getTime() + end.getTime()) / 2
+            );
+
+          const midpointKey = monthKey(midpoint);
+
+          return winners.includes(midpointKey)
+            ? midpointKey
+            : winners[0];
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const key = dominantMonth(p);
+
+          if (!key.startsWith("2024-")) {
+            continue;
+          }
+
+          grouped.set(
+            key,
+            (grouped.get(key) || 0) +
+            Number(p.consumption)
+          );
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([, value]) => value);
+      }
+    customdata: |-
+      $ex {
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantInfo = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+
+          const counts = {};
+
+          let totalDays = 0;
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+            totalDays++;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          let key = winners[0];
+
+          if (winners.length > 1) {
+            const midpoint =
+              new Date(
+                (start.getTime() + end.getTime()) / 2
+              );
+
+            const midpointKey = monthKey(midpoint);
+
+            if (winners.includes(midpointKey)) {
+              key = midpointKey;
+            }
+          }
+
+          return {
+            key,
+            dominantDays: counts[key],
+            totalDays
+          };
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const info = dominantInfo(p);
+
+          if (!info.key.startsWith("2024-")) {
+            continue;
+          }
+
+          const item =
+            grouped.get(info.key) || {
+              records: [],
+              unit: p.unit
+            };
+
+          item.records.push({
+            start: p.start,
+            end: p.end,
+            consumption: p.consumption,
+            dominantDays: info.dominantDays,
+            totalDays: info.totalDays
+          });
+
+          grouped.set(info.key, item);
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, item]) => {
+            const details =
+              item.records
+                .map(r =>
+                  r.start + " → " + r.end +
+                  " (" +
+                  Number(r.consumption).toFixed(1) +
+                  " " + item.unit +
+                  "; " +
+                  r.dominantDays + "/" +
+                  r.totalDays +
+                  " days)"
+                )
+                .join("<br>");
+
+            return [
+              key,
+              item.unit,
+              item.records.length,
+              details
+            ];
+          });
+      }
+    hovertemplate: >-
+      <b>Estimated calendar month: %{customdata[0]}</b><br> Assigned usage:
+      %{y:.1f} %{customdata[1]}<br> Source billing cycles: %{customdata[2]}<br>
+      %{customdata[3]} <extra>2024</extra>
+  - entity: sensor.mud_utilities_test_gas_consumption
+    name: '2025'
+    type: bar
+    showlegend: true
+    x: |-
+      $ex {
+        const months = [
+          "January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"
+        ];
+
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantMonth = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+          const counts = {};
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          if (winners.length === 1) {
+            return winners[0];
+          }
+
+          const midpoint =
+            new Date(
+              (start.getTime() + end.getTime()) / 2
+            );
+
+          const midpointKey = monthKey(midpoint);
+
+          return winners.includes(midpointKey)
+            ? midpointKey
+            : winners[0];
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const key = dominantMonth(p);
+
+          if (!key.startsWith("2025-")) {
+            continue;
+          }
+
+          const item =
+            grouped.get(key) || {
+              consumption: 0,
+              records: []
+            };
+
+          item.consumption +=
+            Number(p.consumption);
+
+          item.records.push(p);
+
+          grouped.set(key, item);
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key]) =>
+            months[Number(key.split("-")[1]) - 1]
+          );
+      }
+    'y': |-
+      $ex {
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantMonth = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+          const counts = {};
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          if (winners.length === 1) {
+            return winners[0];
+          }
+
+          const midpoint =
+            new Date(
+              (start.getTime() + end.getTime()) / 2
+            );
+
+          const midpointKey = monthKey(midpoint);
+
+          return winners.includes(midpointKey)
+            ? midpointKey
+            : winners[0];
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const key = dominantMonth(p);
+
+          if (!key.startsWith("2025-")) {
+            continue;
+          }
+
+          grouped.set(
+            key,
+            (grouped.get(key) || 0) +
+            Number(p.consumption)
+          );
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([, value]) => value);
+      }
+    customdata: |-
+      $ex {
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantInfo = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+          const counts = {};
+          let totalDays = 0;
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+            totalDays++;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          let key = winners[0];
+
+          if (winners.length > 1) {
+            const midpoint =
+              new Date(
+                (start.getTime() + end.getTime()) / 2
+              );
+
+            const midpointKey = monthKey(midpoint);
+
+            if (winners.includes(midpointKey)) {
+              key = midpointKey;
+            }
+          }
+
+          return {
+            key,
+            dominantDays: counts[key],
+            totalDays
+          };
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const info = dominantInfo(p);
+
+          if (!info.key.startsWith("2025-")) {
+            continue;
+          }
+
+          const item =
+            grouped.get(info.key) || {
+              records: [],
+              unit: p.unit
+            };
+
+          item.records.push({
+            start: p.start,
+            end: p.end,
+            consumption: p.consumption,
+            dominantDays: info.dominantDays,
+            totalDays: info.totalDays
+          });
+
+          grouped.set(info.key, item);
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, item]) => {
+            const details =
+              item.records
+                .map(r =>
+                  r.start + " → " + r.end +
+                  " (" +
+                  Number(r.consumption).toFixed(1) +
+                  " " + item.unit +
+                  "; " +
+                  r.dominantDays + "/" +
+                  r.totalDays +
+                  " days)"
+                )
+                .join("<br>");
+
+            return [
+              key,
+              item.unit,
+              item.records.length,
+              details
+            ];
+          });
+      }
+    hovertemplate: >-
+      <b>Estimated calendar month: %{customdata[0]}</b><br> Assigned usage:
+      %{y:.1f} %{customdata[1]}<br> Source billing cycles: %{customdata[2]}<br>
+      %{customdata[3]} <extra>2025</extra>
+  - entity: sensor.mud_utilities_test_gas_consumption
+    name: '2026'
+    type: bar
+    showlegend: true
+    x: |-
+      $ex {
+        const months = [
+          "January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"
+        ];
+
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantMonth = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+          const counts = {};
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          if (winners.length === 1) {
+            return winners[0];
+          }
+
+          const midpoint =
+            new Date(
+              (start.getTime() + end.getTime()) / 2
+            );
+
+          const midpointKey = monthKey(midpoint);
+
+          return winners.includes(midpointKey)
+            ? midpointKey
+            : winners[0];
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const key = dominantMonth(p);
+
+          if (!key.startsWith("2026-")) {
+            continue;
+          }
+
+          const item =
+            grouped.get(key) || {
+              consumption: 0,
+              records: []
+            };
+
+          item.consumption +=
+            Number(p.consumption);
+
+          item.records.push(p);
+
+          grouped.set(key, item);
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key]) =>
+            months[Number(key.split("-")[1]) - 1]
+          );
+      }
+    'y': |-
+      $ex {
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantMonth = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+          const counts = {};
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          if (winners.length === 1) {
+            return winners[0];
+          }
+
+          const midpoint =
+            new Date(
+              (start.getTime() + end.getTime()) / 2
+            );
+
+          const midpointKey = monthKey(midpoint);
+
+          return winners.includes(midpointKey)
+            ? midpointKey
+            : winners[0];
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const key = dominantMonth(p);
+
+          if (!key.startsWith("2026-")) {
+            continue;
+          }
+
+          grouped.set(
+            key,
+            (grouped.get(key) || 0) +
+            Number(p.consumption)
+          );
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([, value]) => value);
+      }
+    customdata: |-
+      $ex {
+        const parseDate = value => {
+          const [y, m, d] = value.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+
+        const monthKey = date =>
+          date.getFullYear() + "-" +
+          String(date.getMonth() + 1).padStart(2, "0");
+
+        const dominantInfo = p => {
+          const start = parseDate(p.start);
+          const end = parseDate(p.end);
+          const counts = {};
+          let totalDays = 0;
+
+          for (
+            let d = new Date(start);
+            d <= end;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const key = monthKey(d);
+            counts[key] = (counts[key] || 0) + 1;
+            totalDays++;
+          }
+
+          const maxDays =
+            Math.max(...Object.values(counts));
+
+          const winners =
+            Object.keys(counts).filter(
+              key => counts[key] === maxDays
+            );
+
+          let key = winners[0];
+
+          if (winners.length > 1) {
+            const midpoint =
+              new Date(
+                (start.getTime() + end.getTime()) / 2
+              );
+
+            const midpointKey = monthKey(midpoint);
+
+            if (winners.includes(midpointKey)) {
+              key = midpointKey;
+            }
+          }
+
+          return {
+            key,
+            dominantDays: counts[key],
+            totalDays
+          };
+        };
+
+        const grouped = new Map();
+
+        for (const p of meta.billing_history) {
+          const info = dominantInfo(p);
+
+          if (!info.key.startsWith("2026-")) {
+            continue;
+          }
+
+          const item =
+            grouped.get(info.key) || {
+              records: [],
+              unit: p.unit
+            };
+
+          item.records.push({
+            start: p.start,
+            end: p.end,
+            consumption: p.consumption,
+            dominantDays: info.dominantDays,
+            totalDays: info.totalDays
+          });
+
+          grouped.set(info.key, item);
+        }
+
+        return Array.from(grouped.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, item]) => {
+            const details =
+              item.records
+                .map(r =>
+                  r.start + " → " + r.end +
+                  " (" +
+                  Number(r.consumption).toFixed(1) +
+                  " " + item.unit +
+                  "; " +
+                  r.dominantDays + "/" +
+                  r.totalDays +
+                  " days)"
+                )
+                .join("<br>");
+
+            return [
+              key,
+              item.unit,
+              item.records.length,
+              details
+            ];
+          });
+      }
+    hovertemplate: >-
+      <b>Estimated calendar month: %{customdata[0]}</b><br> Assigned usage:
+      %{y:.1f} %{customdata[1]}<br> Source billing cycles: %{customdata[2]}<br>
+      %{customdata[3]} <extra>2026</extra>
+layout:
+  height: 460
+  title:
+    text: <b>M.U.D. Gas — Estimated Calendar Month Comparison</b>
+    x: 0.02
+    xanchor: left
+    subtitle:
+      text: >-
+        Estimated month = calendar month containing the most days in each M.U.D.
+        billing cycle. Hover for the source period.
+      font:
+        size: 11
+  barmode: group
+  bargap: 0.18
+  bargroupgap: 0.06
+  margin:
+    t: 70
+    l: 60
+    r: 25
+    b: 115
+  legend:
+    orientation: h
+    x: 0
+    y: 1.08
+  xaxis:
+    type: category
+    categoryorder: array
+    categoryarray:
+      - January
+      - February
+      - March
+      - April
+      - May
+      - June
+      - July
+      - August
+      - September
+      - October
+      - November
+      - December
+    tickangle: 0
+    title:
+      text: Estimated calendar month
+  yaxis:
+    rangemode: tozero
+    title:
+      text: TH
+  hovermode: closest
+  annotations:
+    xref: paper
+    yref: paper
+    x: 0.5
+    y: -0.25
+    showarrow: false
+    xanchor: center
+    font:
+      size: 11
+config:
+  displayModeBar: false

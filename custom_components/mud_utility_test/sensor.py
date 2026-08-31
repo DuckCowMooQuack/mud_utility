@@ -221,12 +221,49 @@ class MudConsumptionSensor(
                         "period_end"
                     )
                 ),
+            # Preserve every billing-cycle record so dashboard
+            # cards can display the exact M.U.D. meter periods
+            # instead of re-bucketing them into calendar months.
+            "billing_history": [
+                {
+                    "start":
+                        self._date_string(
+                            record.get(
+                                "period_start"
+                            )
+                        ),
+                    "end":
+                        self._date_string(
+                            record.get(
+                                "period_end"
+                            )
+                        ),
+                    "billing_period":
+                        record.get(
+                            "billing_period"
+                        ),
+                    "consumption":
+                        record.get(
+                            "consumption"
+                        ),
+                    "unit":
+                        record.get(
+                            "unit"
+                        ),
+                    "reading_category":
+                        record.get(
+                            "reading_category"
+                        ),
+                }
+                for record in history
+            ],
         }
 
     @staticmethod
     def _date_string(
         value,
     ) -> str | None:
+        """Convert a datetime value to YYYY-MM-DD."""
         if value is None:
             return None
 
