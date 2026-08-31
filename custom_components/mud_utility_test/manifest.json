@@ -5,6 +5,7 @@
   "documentation": "https://github.com/DuckCowMooQuack/mud_utility_test",
   "issue_tracker": "https://github.com/DuckCowMooQuack/mud_utility_test/issues",
   "codeowners": ["@DuckCowMooQuack"],
+  "after_dependencies": ["recorder"],
   "config_flow": true,
   "integration_type": "service",
   "single_config_entry": true,
