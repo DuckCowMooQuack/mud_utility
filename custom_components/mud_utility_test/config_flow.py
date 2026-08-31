@@ -1,0 +1,188 @@
+"""Config flow for M.U.D. Utilities Test."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+from aiohttp import ClientError
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession,
+)
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
+
+from .api import (
+    MudApi,
+    MudApiError,
+    MudAuthError,
+)
+from .const import (
+    CONF_GAS_CONTRACT,
+    CONF_WATER_CONTRACT,
+    DOMAIN,
+)
+
+_PASSWORD_SELECTOR = TextSelector(
+    TextSelectorConfig(
+        type=TextSelectorType.PASSWORD
+    )
+)
+
+
+class MudUtilityConfigFlow(
+    config_entries.ConfigFlow,
+    domain=DOMAIN,
+):
+    """Handle a config flow for M.U.D. Utilities Test."""
+
+    VERSION = 1
+
+    async def async_step_user(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle initial setup."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await self._async_validate(
+                    user_input
+                )
+
+            except MudAuthError:
+                errors["base"] = "invalid_auth"
+
+            except (
+                MudApiError,
+                ClientError,
+                TimeoutError,
+            ):
+                errors["base"] = "cannot_connect"
+
+            else:
+                await self.async_set_unique_id(
+                    user_input[
+                        CONF_USERNAME
+                    ].lower()
+                )
+
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title="M.U.D. Utilities Test",
+                    data=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME
+                    ): str,
+
+                    vol.Required(
+                        CONF_PASSWORD
+                    ): _PASSWORD_SELECTOR,
+
+                    vol.Required(
+                        CONF_GAS_CONTRACT
+                    ): vol.All(str, vol.Match(r"^\d+$")),
+
+                    vol.Required(
+                        CONF_WATER_CONTRACT
+                    ): vol.All(str, vol.Match(r"^\d+$")),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self,
+        entry_data: Mapping[str, Any],
+    ) -> ConfigFlowResult:
+        """Start reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            updated_data = dict(entry.data)
+            updated_data[CONF_PASSWORD] = (
+                user_input[CONF_PASSWORD]
+            )
+
+            try:
+                await self._async_validate(
+                    updated_data
+                )
+
+            except MudAuthError:
+                errors["base"] = "invalid_auth"
+
+            except (
+                MudApiError,
+                ClientError,
+                TimeoutError,
+            ):
+                errors["base"] = "cannot_connect"
+
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_PASSWORD:
+                            user_input[
+                                CONF_PASSWORD
+                            ]
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_PASSWORD
+                    ): _PASSWORD_SELECTOR
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _async_validate(
+        self,
+        data: Mapping[str, Any],
+    ) -> None:
+        """Validate credentials and contract IDs."""
+        api = MudApi(
+            async_get_clientsession(
+                self.hass
+            ),
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            data[CONF_GAS_CONTRACT],
+            data[CONF_WATER_CONTRACT],
+        )
+
+        await api.async_fetch_all()

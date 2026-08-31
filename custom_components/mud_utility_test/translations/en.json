@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to M.U.D. Utilities Test",
+        "description": "Sign in to the M.U.D. customer portal and enter the gas and water contract IDs from your account.",
+        "data": {
+          "username": "Username / email",
+          "password": "Password",
+          "gas_contract": "Gas contract ID",
+          "water_contract": "Water contract ID"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate M.U.D. Utilities Test",
+        "description": "Enter your current M.U.D. password.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to M.U.D. or retrieve utility data.",
+      "invalid_auth": "M.U.D. rejected the username or password."
+    },
+    "abort": {
+      "already_configured": "This M.U.D. Utilities Test account is already configured.",
+      "reauth_successful": "M.U.D. Utilities Test reauthentication was successful."
+    }
+  }
+}
