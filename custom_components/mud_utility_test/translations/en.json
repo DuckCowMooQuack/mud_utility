@@ -21,6 +21,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to M.U.D. or retrieve utility data.",
+      "invalid_contract": "Contract IDs must contain only numbers.",
       "invalid_auth": "M.U.D. rejected the username or password."
     },
     "abort": {

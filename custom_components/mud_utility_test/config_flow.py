@@ -41,6 +41,27 @@ _PASSWORD_SELECTOR = TextSelector(
 )
 
 
+def _validate_contract_ids(
+    user_input: dict[str, Any],
+) -> dict[str, str]:
+    """Return form errors for invalid contract IDs."""
+    errors: dict[str, str] = {}
+
+    for field in (
+        CONF_GAS_CONTRACT,
+        CONF_WATER_CONTRACT,
+    ):
+        value = user_input[field].strip()
+
+        if not value.isdecimal():
+            errors[field] = "invalid_contract"
+            continue
+
+        user_input[field] = value
+
+    return errors
+
+
 class MudUtilityConfigFlow(
     config_entries.ConfigFlow,
     domain=DOMAIN,
@@ -57,34 +78,39 @@ class MudUtilityConfigFlow(
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                await self._async_validate(
-                    user_input
-                )
+            errors = _validate_contract_ids(
+                user_input
+            )
 
-            except MudAuthError:
-                errors["base"] = "invalid_auth"
+            if not errors:
+                try:
+                    await self._async_validate(
+                        user_input
+                    )
 
-            except (
-                MudApiError,
-                ClientError,
-                TimeoutError,
-            ):
-                errors["base"] = "cannot_connect"
+                except MudAuthError:
+                    errors["base"] = "invalid_auth"
 
-            else:
-                await self.async_set_unique_id(
-                    user_input[
-                        CONF_USERNAME
-                    ].lower()
-                )
+                except (
+                    MudApiError,
+                    ClientError,
+                    TimeoutError,
+                ):
+                    errors["base"] = "cannot_connect"
 
-                self._abort_if_unique_id_configured()
+                else:
+                    await self.async_set_unique_id(
+                        user_input[
+                            CONF_USERNAME
+                        ].lower()
+                    )
 
-                return self.async_create_entry(
-                    title="M.U.D. Utilities Test",
-                    data=user_input,
-                )
+                    self._abort_if_unique_id_configured()
+
+                    return self.async_create_entry(
+                        title="M.U.D. Utilities Test",
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -100,11 +126,11 @@ class MudUtilityConfigFlow(
 
                     vol.Required(
                         CONF_GAS_CONTRACT
-                    ): vol.All(str, vol.Match(r"^\d+$")),
+                    ): str,
 
                     vol.Required(
                         CONF_WATER_CONTRACT
-                    ): vol.All(str, vol.Match(r"^\d+$")),
+                    ): str,
                 }
             ),
             errors=errors,
