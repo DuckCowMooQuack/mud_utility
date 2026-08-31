@@ -1,13 +1,13 @@
 {
   "domain": "mud_utility_test",
   "name": "M.U.D. Utilities Test",
-  "version": "0.2.0",
-  "documentation": "https://github.com/DuckCowMooQuack/mud_utility_test",
-  "issue_tracker": "https://github.com/DuckCowMooQuack/mud_utility_test/issues",
-  "codeowners": ["@DuckCowMooQuack"],
   "after_dependencies": ["recorder"],
+  "codeowners": ["@DuckCowMooQuack"],
   "config_flow": true,
+  "documentation": "https://github.com/DuckCowMooQuack/mud_utility_test",
   "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/DuckCowMooQuack/mud_utility_test/issues",
   "single_config_entry": true,
-  "iot_class": "cloud_polling"
+  "version": "0.2.0"
 }
