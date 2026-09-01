@@ -4,7 +4,7 @@ grid_options:
 hours_to_show: 1s
 raw_plotly_config: true
 entities:
-  - entity: sensor.mud_utilities_test_gas_consumption
+  - entity: sensor.mud_gas_consumption
     name: '2024'
     type: bar
     showlegend: true
@@ -277,7 +277,7 @@ entities:
       <b>Estimated calendar month: %{customdata[0]}</b><br> Assigned usage:
       %{y:.1f} %{customdata[1]}<br> Source billing cycles: %{customdata[2]}<br>
       %{customdata[3]} <extra>2024</extra>
-  - entity: sensor.mud_utilities_test_gas_consumption
+  - entity: sensor.mud_gas_consumption
     name: '2025'
     type: bar
     showlegend: true
@@ -546,7 +546,7 @@ entities:
       <b>Estimated calendar month: %{customdata[0]}</b><br> Assigned usage:
       %{y:.1f} %{customdata[1]}<br> Source billing cycles: %{customdata[2]}<br>
       %{customdata[3]} <extra>2025</extra>
-  - entity: sensor.mud_utilities_test_gas_consumption
+  - entity: sensor.mud_gas_consumption
     name: '2026'
     type: bar
     showlegend: true

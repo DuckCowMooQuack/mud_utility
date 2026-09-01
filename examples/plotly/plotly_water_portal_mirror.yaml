@@ -5,7 +5,7 @@ grid_options:
 hours_to_show: 1s
 raw_plotly_config: true
 entities:
-  - entity: sensor.mud_utilities_test_water_consumption
+  - entity: sensor.mud_water_consumption
     name: '2024'
     type: bar
     showlegend: true
@@ -65,7 +65,7 @@ entities:
     hovertemplate: >-
       <b>%{customdata[0]}</b><br> Usage: %{y:.1f} %{customdata[3]}<br> Billing
       cycle: %{customdata[1]} → %{customdata[2]} <extra>2024</extra>
-  - entity: sensor.mud_utilities_test_water_consumption
+  - entity: sensor.mud_water_consumption
     name: '2025'
     type: bar
     showlegend: true
@@ -125,7 +125,7 @@ entities:
     hovertemplate: >-
       <b>%{customdata[0]}</b><br> Usage: %{y:.1f} %{customdata[3]}<br> Billing
       cycle: %{customdata[1]} → %{customdata[2]} <extra>2025</extra>
-  - entity: sensor.mud_utilities_test_water_consumption
+  - entity: sensor.mud_water_consumption
     name: '2026'
     type: bar
     showlegend: true

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to MUD Utilities Test",
+        "title": "Connect to MUD Utilities",
         "description": "Sign in to the M.U.D. customer portal and enter the gas and water contract IDs from your account.",
         "data": {
           "username": "Username / email",
@@ -12,7 +12,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Reauthenticate MUD Utilities Test",
+        "title": "Reauthenticate MUD Utilities",
         "description": "Enter your current M.U.D. password.",
         "data": {
           "password": "Password"
@@ -25,8 +25,8 @@
       "invalid_auth": "M.U.D. rejected the username or password."
     },
     "abort": {
-      "already_configured": "This MUD Utilities Test account is already configured.",
-      "reauth_successful": "MUD Utilities Test reauthentication was successful."
+      "already_configured": "This MUD Utilities account is already configured.",
+      "reauth_successful": "MUD Utilities reauthentication was successful."
     }
   }
 }

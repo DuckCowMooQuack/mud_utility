@@ -1,4 +1,4 @@
-"""Config flow for MUD Utilities Test."""
+"""Config flow for MUD Utilities."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ class MudUtilityConfigFlow(
     config_entries.ConfigFlow,
     domain=DOMAIN,
 ):
-    """Handle a config flow for MUD Utilities Test."""
+    """Handle a config flow for MUD Utilities."""
 
     VERSION = 1
 
@@ -108,7 +108,7 @@ class MudUtilityConfigFlow(
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
-                        title="MUD Utilities Test",
+                        title="MUD Utilities",
                         data=user_input,
                     )
 
