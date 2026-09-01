@@ -1,4 +1,4 @@
-"""Sensors for M.U.D. Utilities Test."""
+"""Sensors for MUD Utilities Test."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up M.U.D. Utilities Test sensors."""
+    """Set up MUD Utilities Test sensors."""
     coordinator: MudDataUpdateCoordinator = (
         entry.runtime_data
     )
@@ -66,7 +66,7 @@ class MudBaseSensor(
     ],
     SensorEntity,
 ):
-    """Base sensor for M.U.D. Utilities Test."""
+    """Base sensor for MUD Utilities Test."""
 
     _attr_has_entity_name = True
 
@@ -87,7 +87,7 @@ class MudBaseSensor(
                         entry.entry_id,
                     )
                 },
-                name="M.U.D. Utilities Test",
+                name="MUD Utilities Test",
                 manufacturer=(
                     "Metropolitan "
                     "Utilities District"

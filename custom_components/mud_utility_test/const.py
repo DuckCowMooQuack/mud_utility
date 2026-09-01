@@ -1,4 +1,4 @@
-"""Constants for the M.U.D. Utilities Test integration."""
+"""Constants for MUD Utilities Test integration."""
 
 from datetime import timedelta
 

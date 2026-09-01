@@ -1,4 +1,4 @@
-"""M.U.D. Utilities Test integration."""
+"""MUD Utilities Test integration."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> bool:
-    """Set up M.U.D. Utilities Test from a config entry."""
+    """Set up MUD Utilities Test from a config entry."""
     api = MudApi(
         async_get_clientsession(hass),
         entry.data[CONF_USERNAME],
@@ -57,7 +57,7 @@ async def async_unload_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ) -> bool:
-    """Unload M.U.D. Utilities Test."""
+    """Unload MUD Utilities Test."""
     return await hass.config_entries.async_unload_platforms(
         entry,
         PLATFORMS,

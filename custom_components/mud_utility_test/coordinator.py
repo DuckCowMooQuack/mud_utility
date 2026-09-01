@@ -1,4 +1,4 @@
-"""Data coordinator for M.U.D. Utilities Test."""
+"""Data coordinator for MUD Utilities Test."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ WATER_STATISTIC_ID = (
 class MudDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, Any]]
 ):
-    """Fetch M.U.D. Utilities Test data and maintain historical statistics."""
+    """Fetch MUD Utilities Test data and maintain historical statistics."""
 
     def __init__(
         self,
@@ -69,7 +69,7 @@ class MudDataUpdateCoordinator(
     async def _async_update_data(
         self,
     ) -> dict[str, Any]:
-        """Refresh M.U.D. Utilities Test and import historical statistics."""
+        """Refresh MUD Utilities Test and import historical statistics."""
         try:
             data = await self.api.async_fetch_all()
 
@@ -102,7 +102,7 @@ class MudDataUpdateCoordinator(
             utility="gas",
             history=data["gas"]["history"],
             statistic_id=GAS_STATISTIC_ID,
-            name="M.U.D. Utilities Test Gas Consumption",
+            name="MUD Utilities Test Gas Consumption",
             unit="TH",
             unit_class=None,
         )
@@ -111,7 +111,7 @@ class MudDataUpdateCoordinator(
             utility="water",
             history=data["water"]["history"],
             statistic_id=WATER_STATISTIC_ID,
-            name="M.U.D. Utilities Test Water Consumption",
+            name="MUD Utilities Test Water Consumption",
             unit=UnitOfVolume.CENTUM_CUBIC_FEET,
             unit_class=VolumeConverter.UNIT_CLASS,
         )

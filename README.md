@@ -1,4 +1,4 @@
-# M.U.D. Utilities Test
+# MUD Utilities Test
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DuckCowMooQuack&repository=mud_utility_test&category=integration)
 
@@ -28,12 +28,12 @@ Use the badge above or add the repository manually:
 5. Enter `https://github.com/DuckCowMooQuack/mud_utility_test`.
 6. Select category `Integration`.
 7. Select **Add**.
-8. Open `M.U.D. Utilities Test` in HACS.
+8. Open `MUD Utilities Test` in HACS.
 9. Select **Download**.
 10. Restart Home Assistant.
 11. Go to **Settings > Devices & services**.
 12. Select **Add integration**.
-13. Search for `M.U.D. Utilities Test`.
+13. Search for `MUD Utilities Test`.
 14. Enter your M.U.D. username, password, gas contract ID, and water contract ID.
 
 ### Manual
@@ -44,7 +44,7 @@ Copy this directory into Home Assistant:
 custom_components/mud_utility_test
 ```
 
-After copying, restart Home Assistant and add `M.U.D. Utilities Test` from the integrations UI.
+After copying, restart Home Assistant and add `MUD Utilities Test` from the integrations UI.
 
 ## Configuration
 
@@ -61,7 +61,7 @@ The contract IDs are visible in your M.U.D. account. They are not included in th
 
 Optional Plotly Graph Card examples are available in `examples/plotly`.
 
-These cards use the `billing_history` sensor attribute exposed by this integration and require the separate Plotly Graph Card custom card. The examples use likely test entity IDs such as `sensor.mud_utilities_test_gas_consumption` and `sensor.mud_utilities_test_water_consumption`; adjust them to match the entity IDs created in your Home Assistant instance.
+These cards use the `billing_history` sensor attribute exposed by this integration and require the separate Plotly Graph Card custom card. Fresh installs should create test entity IDs such as `sensor.mud_utilities_test_gas_consumption` and `sensor.mud_utilities_test_water_consumption`; adjust them if your Home Assistant instance creates different entity IDs.
 
 ## Privacy
 
