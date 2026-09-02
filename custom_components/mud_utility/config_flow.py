@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession,
+    async_create_clientsession,
 )
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -201,14 +201,15 @@ class MudUtilityConfigFlow(
         data: Mapping[str, Any],
     ) -> None:
         """Validate credentials and contract IDs."""
-        api = MudApi(
-            async_get_clientsession(
-                self.hass
-            ),
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            data[CONF_GAS_CONTRACT],
-            data[CONF_WATER_CONTRACT],
-        )
-
-        await api.async_fetch_all()
+        session = async_create_clientsession(self.hass)
+        try:
+            api = MudApi(
+                session,
+                data[CONF_USERNAME],
+                data[CONF_PASSWORD],
+                data[CONF_GAS_CONTRACT],
+                data[CONF_WATER_CONTRACT],
+            )
+            await api.async_fetch_all()
+        finally:
+            session.detach()
