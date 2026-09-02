@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 
 from aiohttp import ClientSession, ClientTimeout
 
@@ -121,62 +121,66 @@ class MudApi:
             "ContractConsumptionValues"
         )
 
-        # Current year - 2 gives us Jan 1, 2024 in 2026.
-        # This covers the history we've confirmed M.U.D. exposes.
-        start_year = (
-            datetime.now(timezone.utc).year - 2
-        )
-
         params = {
-            "$filter": (
-                "StartDate ge datetime'"
-                f"{start_year}-01-01T00:00:00' "
-                "and ConsumptionPeriodTypeID eq 'BC'"
-            ),
+            "$filter": ("ConsumptionPeriodTypeID eq 'BC'"),
             "$expand": "MeterReadingCategory",
             "$format": "json",
         }
 
-        async with self._session.get(
-            url,
-            params=params,
-            headers={
-                "Accept": "application/json",
-                "DataServiceVersion": "2.0",
-                "MaxDataServiceVersion": "2.0",
-            },
-            timeout=_TIMEOUT,
-        ) as response:
-            if response.status in (401, 403):
-                raise MudAuthError(
-                    f"M.U.D. rejected the authenticated "
-                    f"{utility} request "
-                    f"(HTTP {response.status})"
-                )
+        rows: list[dict[str, Any]] = []
+        next_url: str | None = url
+        next_params: dict[str, str] | None = params
 
-            if response.status >= 400:
-                body = (await response.text())[:300]
+        while next_url is not None:
+            async with self._session.get(
+                next_url,
+                params=next_params,
+                headers={
+                    "Accept": "application/json",
+                    "DataServiceVersion": "2.0",
+                    "MaxDataServiceVersion": "2.0",
+                },
+                timeout=_TIMEOUT,
+            ) as response:
+                if response.status in (401, 403):
+                    raise MudAuthError(
+                        f"M.U.D. rejected the authenticated "
+                        f"{utility} request "
+                        f"(HTTP {response.status})"
+                    )
 
-                raise MudApiError(
-                    f"M.U.D. {utility} request returned "
-                    f"HTTP {response.status}: {body}"
-                )
+                if response.status >= 400:
+                    body = (await response.text())[:300]
 
-            try:
-                payload = await response.json(
-                    content_type=None
-                )
-                rows = payload["d"]["results"]
+                    raise MudApiError(
+                        f"M.U.D. {utility} request returned "
+                        f"HTTP {response.status}: {body}"
+                    )
 
-            except (
-                ValueError,
-                KeyError,
-                TypeError,
-            ) as err:
-                raise MudApiError(
-                    "Unexpected M.U.D. response "
-                    f"format for {utility}"
-                ) from err
+                try:
+                    payload = await response.json(
+                        content_type=None
+                    )
+                    page = payload["d"]
+                    rows.extend(page["results"])
+
+                except (
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                ) as err:
+                    raise MudApiError(
+                        "Unexpected M.U.D. response "
+                        f"format for {utility}"
+                    ) from err
+
+            next_page = page.get("__next")
+            next_url = (
+                urljoin(BASE_URL, next_page)
+                if isinstance(next_page, str)
+                else None
+            )
+            next_params = None
 
         if not rows:
             raise MudApiError(

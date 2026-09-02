@@ -102,7 +102,7 @@ class MudDataUpdateCoordinator(
             utility="gas",
             history=data["gas"]["history"],
             statistic_id=GAS_STATISTIC_ID,
-            name="MUD Gas Consumption",
+            name="MUD Utilities Gas Consumption",
             unit="TH",
             unit_class=None,
         )
@@ -111,7 +111,7 @@ class MudDataUpdateCoordinator(
             utility="water",
             history=data["water"]["history"],
             statistic_id=WATER_STATISTIC_ID,
-            name="MUD Water Consumption",
+            name="MUD Utilities Water Consumption",
             unit=UnitOfVolume.CENTUM_CUBIC_FEET,
             unit_class=VolumeConverter.UNIT_CLASS,
         )
@@ -161,6 +161,12 @@ class MudDataUpdateCoordinator(
 
             if timestamp is None:
                 continue
+
+            timestamp = timestamp.replace(
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
 
             value = float(value)
 
