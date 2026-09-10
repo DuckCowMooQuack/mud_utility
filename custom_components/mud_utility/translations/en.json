@@ -22,11 +22,23 @@
     "error": {
       "cannot_connect": "Unable to connect to M.U.D. or retrieve utility data.",
       "invalid_contract": "Contract IDs must contain only numbers.",
+      "missing_contract": "Enter at least one gas or water contract ID.",
       "invalid_auth": "M.U.D. rejected the username or password."
     },
     "abort": {
       "already_configured": "This MUD Utilities account is already configured.",
       "reauth_successful": "MUD Utilities reauthentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "MUD Utilities options",
+        "description": "Set how often Home Assistant refreshes M.U.D. utility data.",
+        "data": {
+          "update_interval_hours": "Refresh interval in hours"
+        }
+      }
     }
   }
 }

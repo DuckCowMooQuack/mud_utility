@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from aiohttp import ClientSession
 from dataclasses import dataclass
+from datetime import timedelta
+
+from aiohttp import ClientSession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -18,7 +20,9 @@ from homeassistant.helpers.aiohttp_client import (
 from .api import MudApi
 from .const import (
     CONF_GAS_CONTRACT,
+    CONF_UPDATE_INTERVAL_HOURS,
     CONF_WATER_CONTRACT,
+    DEFAULT_UPDATE_INTERVAL_HOURS,
 )
 from .coordinator import MudDataUpdateCoordinator
 
@@ -48,20 +52,32 @@ async def async_setup_entry(
         entry.data[CONF_WATER_CONTRACT],
     )
 
+    interval_hours = entry.options.get(
+        CONF_UPDATE_INTERVAL_HOURS,
+        DEFAULT_UPDATE_INTERVAL_HOURS,
+    )
+
     coordinator = MudDataUpdateCoordinator(
         hass,
         api,
+        update_interval=timedelta(hours=interval_hours),
     )
 
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception:
-        session.detach()
+        await session.close()
         raise
 
     entry.runtime_data = MudRuntimeData(
         coordinator=coordinator,
         session=session,
+    )
+
+    entry.async_on_unload(
+        entry.add_update_listener(
+            _async_update_listener
+        )
     )
 
     await hass.config_entries.async_forward_entry_setups(
@@ -83,6 +99,14 @@ async def async_unload_entry(
     )
 
     if unload_ok:
-        entry.runtime_data.session.detach()
+        await entry.runtime_data.session.close()
 
     return unload_ok
+
+
+async def _async_update_listener(
+    hass: HomeAssistant,
+    entry: MudUtilityConfigEntry,
+) -> None:
+    """Reload MUD Utilities when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)

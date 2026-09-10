@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import timedelta
 from typing import Any
 
 from aiohttp import ClientError
-
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
@@ -34,7 +34,7 @@ from .api import (
     MudApiError,
     MudAuthError,
 )
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,12 +56,13 @@ class MudDataUpdateCoordinator(
         self,
         hass: HomeAssistant,
         api: MudApi,
+        update_interval: timedelta,
     ) -> None:
         super().__init__(
             hass,
             logger=_LOGGER,
             name=DOMAIN,
-            update_interval=UPDATE_INTERVAL,
+            update_interval=update_interval,
         )
 
         self.api = api
@@ -97,24 +98,27 @@ class MudDataUpdateCoordinator(
         self,
         data: dict[str, Any],
     ) -> None:
-        """Import all known gas and water billing-cycle history."""
-        self._import_utility_history(
-            utility="gas",
-            history=data["gas"]["history"],
-            statistic_id=GAS_STATISTIC_ID,
-            name="MUD Utilities Gas Consumption",
-            unit="TH",
-            unit_class=None,
-        )
+        """Import all known configured billing-cycle history."""
 
-        self._import_utility_history(
-            utility="water",
-            history=data["water"]["history"],
-            statistic_id=WATER_STATISTIC_ID,
-            name="MUD Utilities Water Consumption",
-            unit=UnitOfVolume.CENTUM_CUBIC_FEET,
-            unit_class=VolumeConverter.UNIT_CLASS,
-        )
+        if "gas" in data:
+            self._import_utility_history(
+                utility="gas",
+                history=data["gas"]["history"],
+                statistic_id=GAS_STATISTIC_ID,
+                name="MUD Utilities Gas Consumption",
+                unit="TH",
+                unit_class=None,
+            )
+
+        if "water" in data:
+            self._import_utility_history(
+                utility="water",
+                history=data["water"]["history"],
+                statistic_id=WATER_STATISTIC_ID,
+                name="MUD Utilities Water Consumption",
+                unit=UnitOfVolume.CENTUM_CUBIC_FEET,
+                unit_class=VolumeConverter.UNIT_CLASS,
+            )
 
     def _import_utility_history(
         self,

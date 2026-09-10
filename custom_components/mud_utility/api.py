@@ -87,24 +87,26 @@ class MudApi:
                 )
 
     async def async_fetch_all(self) -> dict[str, Any]:
-        """Log in once and fetch full gas and water history."""
+        """Log in and fetch configured utility history."""
         await self.async_login()
 
-        gas = await self._async_get_consumption(
-            "gas",
-            self._gas_contract,
-        )
-
-        water = await self._async_get_consumption(
-            "water",
-            self._water_contract,
-        )
-
-        return {
+        data: dict[str, Any] = {
             "retrieved_at": datetime.now(timezone.utc),
-            "gas": gas,
-            "water": water,
         }
+
+        if self._gas_contract:
+            data["gas"] = await self._async_get_consumption(
+                "gas",
+                self._gas_contract,
+            )
+
+        if self._water_contract:
+            data["water"] = await self._async_get_consumption(
+                "water",
+                self._water_contract,
+            )
+
+        return data
 
     async def _async_get_consumption(
         self,

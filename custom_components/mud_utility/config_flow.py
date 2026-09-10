@@ -5,9 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiohttp import ClientError
 import voluptuous as vol
-
+from aiohttp import ClientError
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
@@ -30,8 +29,12 @@ from .api import (
 )
 from .const import (
     CONF_GAS_CONTRACT,
+    CONF_UPDATE_INTERVAL_HOURS,
     CONF_WATER_CONTRACT,
+    DEFAULT_UPDATE_INTERVAL_HOURS,
     DOMAIN,
+    MAX_UPDATE_INTERVAL_HOURS,
+    MIN_UPDATE_INTERVAL_HOURS,
 )
 
 _PASSWORD_SELECTOR = TextSelector(
@@ -51,13 +54,20 @@ def _validate_contract_ids(
         CONF_GAS_CONTRACT,
         CONF_WATER_CONTRACT,
     ):
-        value = user_input[field].strip()
+        value = str(user_input.get(field, "")).strip()
+        user_input[field] = value
+
+        if not value:
+            continue
 
         if not value.isdecimal():
             errors[field] = "invalid_contract"
-            continue
 
-        user_input[field] = value
+    if (
+        not user_input[CONF_GAS_CONTRACT]
+        and not user_input[CONF_WATER_CONTRACT]
+    ):
+        errors["base"] = "missing_contract"
 
     return errors
 
@@ -69,6 +79,13 @@ class MudUtilityConfigFlow(
     """Handle a config flow for MUD Utilities."""
 
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(
+        _config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return MudUtilityOptionsFlow()
 
     async def async_step_user(
         self,
@@ -124,12 +141,14 @@ class MudUtilityConfigFlow(
                         CONF_PASSWORD
                     ): _PASSWORD_SELECTOR,
 
-                    vol.Required(
-                        CONF_GAS_CONTRACT
+                    vol.Optional(
+                        CONF_GAS_CONTRACT,
+                        default=""
                     ): str,
 
-                    vol.Required(
-                        CONF_WATER_CONTRACT
+                    vol.Optional(
+                        CONF_WATER_CONTRACT,
+                        default=""
                     ): str,
                 }
             ),
@@ -212,4 +231,40 @@ class MudUtilityConfigFlow(
             )
             await api.async_fetch_all()
         finally:
-            session.detach()
+            await session.close()
+
+
+class MudUtilityOptionsFlow(config_entries.OptionsFlow):
+    """Handle MUD Utilities options."""
+
+    async def async_step_init(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Manage integration options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",
+                data=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_UPDATE_INTERVAL_HOURS,
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL_HOURS,
+                            DEFAULT_UPDATE_INTERVAL_HOURS,
+                        ),
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(
+                            min=MIN_UPDATE_INTERVAL_HOURS,
+                            max=MAX_UPDATE_INTERVAL_HOURS,
+                        ),
+                    )
+                }
+            ),
+        )
