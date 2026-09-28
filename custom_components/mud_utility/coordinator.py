@@ -53,6 +53,16 @@ WATER_STATISTIC_ID = (
     f"{DOMAIN}:water_consumption"
 )
 
+GAS_COST_STATISTIC_ID = (
+    f"{DOMAIN}:gas_cost"
+)
+
+WATER_COST_STATISTIC_ID = (
+    f"{DOMAIN}:water_cost"
+)
+
+DEFAULT_CURRENCY = "USD"
+
 
 class MudDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, Any]]
@@ -121,6 +131,16 @@ class MudDataUpdateCoordinator(
                 factor=THERM_TO_KWH,
             )
 
+            self._import_utility_history(
+                utility="gas cost",
+                history=data["gas"]["history"],
+                statistic_id=GAS_COST_STATISTIC_ID,
+                name="MUD Utilities Gas Cost",
+                unit=self._currency(data["gas"]["history"]),
+                unit_class=None,
+                value_key="billed_amount",
+            )
+
         if "water" in data:
             self._import_utility_history(
                 utility="water",
@@ -130,6 +150,29 @@ class MudDataUpdateCoordinator(
                 unit=UnitOfVolume.CENTUM_CUBIC_FEET,
                 unit_class=VolumeConverter.UNIT_CLASS,
             )
+
+            self._import_utility_history(
+                utility="water cost",
+                history=data["water"]["history"],
+                statistic_id=WATER_COST_STATISTIC_ID,
+                name="MUD Utilities Water Cost",
+                unit=self._currency(data["water"]["history"]),
+                unit_class=None,
+                value_key="billed_amount",
+            )
+
+    @staticmethod
+    def _currency(
+        history: list[dict[str, Any]],
+    ) -> str:
+        """Return the billing currency reported by M.U.D."""
+        for record in history:
+            currency = record.get("currency")
+
+            if isinstance(currency, str) and currency.strip():
+                return currency.strip()
+
+        return DEFAULT_CURRENCY
 
     def _import_utility_history(
         self,
@@ -141,10 +184,12 @@ class MudDataUpdateCoordinator(
         unit: str,
         unit_class: str | None,
         factor: float = 1.0,
+        value_key: str = "consumption",
     ) -> None:
         """Import one utility's billing-cycle records.
 
-        ``factor`` converts the portal's value into ``unit``.
+        ``value_key`` selects the record field to import (consumption or
+        billed amount). ``factor`` converts that value into ``unit``.
         """
         metadata = StatisticMetaData(
             mean_type=StatisticMeanType.NONE,
@@ -164,7 +209,7 @@ class MudDataUpdateCoordinator(
 
         for record in history:
             value = record.get(
-                "consumption"
+                value_key
             )
 
             timestamp = (
