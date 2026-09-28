@@ -16,7 +16,10 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
 )
-from homeassistant.const import UnitOfVolume
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 from homeassistant.util.unit_conversion import (
+    EnergyConverter,
     VolumeConverter,
 )
 
@@ -34,7 +38,10 @@ from .api import (
     MudApiError,
     MudAuthError,
 )
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    THERM_TO_KWH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,8 +113,12 @@ class MudDataUpdateCoordinator(
                 history=data["gas"]["history"],
                 statistic_id=GAS_STATISTIC_ID,
                 name="MUD Utilities Gas Consumption",
-                unit="TH",
-                unit_class=None,
+                # M.U.D. reports therms, which the Energy Dashboard does
+                # not accept. Import as energy (kWh) so the statistic can
+                # be selected as a gas source.
+                unit=UnitOfEnergy.KILO_WATT_HOUR,
+                unit_class=EnergyConverter.UNIT_CLASS,
+                factor=THERM_TO_KWH,
             )
 
         if "water" in data:
@@ -129,8 +140,12 @@ class MudDataUpdateCoordinator(
         name: str,
         unit: str,
         unit_class: str | None,
+        factor: float = 1.0,
     ) -> None:
-        """Import one utility's billing-cycle records."""
+        """Import one utility's billing-cycle records.
+
+        ``factor`` converts the portal's value into ``unit``.
+        """
         metadata = StatisticMetaData(
             mean_type=StatisticMeanType.NONE,
             has_sum=True,
@@ -172,7 +187,7 @@ class MudDataUpdateCoordinator(
                 microsecond=0,
             )
 
-            value = float(value)
+            value = float(value) * factor
 
             cumulative_sum += value
 

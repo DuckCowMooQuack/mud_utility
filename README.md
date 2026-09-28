@@ -57,6 +57,20 @@ You need:
 
 The contract IDs are visible in your M.U.D. account. They are not included in this repository and must be entered by each user during setup.
 
+## Energy Dashboard
+
+The integration imports M.U.D. billing-cycle history as long-term statistics, which the Energy Dashboard can use directly.
+
+1. Go to **Settings > Dashboards > Energy**.
+2. **Gas consumption:** select **Add gas source** and choose the statistic **MUD Utilities Gas Consumption**.
+3. **Water consumption:** select **Add water source** and choose **MUD Utilities Water Consumption**.
+
+Use the statistics rather than the `sensor.mud_*_consumption` entities. The sensors show the latest billing cycle, not a running total.
+
+Gas is billed by M.U.D. in therms, which the Energy Dashboard does not accept as a gas unit. The gas statistic is therefore imported as energy in kWh (1 therm = 29.3001 kWh) and works as a gas source. This is an exact unit conversion and does not depend on M.U.D.'s monthly heat value or pressure factor. The `sensor.mud_gas_consumption` entity still reports therms, so it matches your bill.
+
+If you use a static gas price in the Energy Dashboard, enter it per kWh. Divide your price per therm by 29.3001 (for example, $1.00 per therm is about $0.0341 per kWh).
+
 ## Plotly Examples
 
 Optional Plotly Graph Card examples are available in `examples/plotly`.
@@ -72,3 +86,5 @@ This integration stores your M.U.D. username, password, and contract IDs in Home
 This is an unofficial integration and is not affiliated with or endorsed by Metropolitan Utilities District.
 
 The integration imports billing-cycle records into Home Assistant long-term statistics using statistic IDs such as `mud_utility:gas_consumption` and `mud_utility:water_consumption`.
+
+The gas statistic is stored in kWh and the water statistic in CCF. If you upgrade from a version that stored gas in therms, the next refresh rewrites the gas history in kWh automatically.
