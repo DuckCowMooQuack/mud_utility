@@ -16,7 +16,10 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
 )
-from homeassistant.const import UnitOfVolume
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 from homeassistant.util.unit_conversion import (
+    EnergyConverter,
     VolumeConverter,
 )
 
@@ -34,7 +38,10 @@ from .api import (
     MudApiError,
     MudAuthError,
 )
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    THERM_TO_KWH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +52,16 @@ GAS_STATISTIC_ID = (
 WATER_STATISTIC_ID = (
     f"{DOMAIN}:water_consumption"
 )
+
+GAS_COST_STATISTIC_ID = (
+    f"{DOMAIN}:gas_cost"
+)
+
+WATER_COST_STATISTIC_ID = (
+    f"{DOMAIN}:water_cost"
+)
+
+DEFAULT_CURRENCY = "USD"
 
 
 class MudDataUpdateCoordinator(
@@ -106,8 +123,22 @@ class MudDataUpdateCoordinator(
                 history=data["gas"]["history"],
                 statistic_id=GAS_STATISTIC_ID,
                 name="MUD Utilities Gas Consumption",
-                unit="TH",
+                # M.U.D. reports therms, which the Energy Dashboard does
+                # not accept. Import as energy (kWh) so the statistic can
+                # be selected as a gas source.
+                unit=UnitOfEnergy.KILO_WATT_HOUR,
+                unit_class=EnergyConverter.UNIT_CLASS,
+                factor=THERM_TO_KWH,
+            )
+
+            self._import_utility_history(
+                utility="gas cost",
+                history=data["gas"]["history"],
+                statistic_id=GAS_COST_STATISTIC_ID,
+                name="MUD Utilities Gas Cost",
+                unit=self._currency(data["gas"]["history"]),
                 unit_class=None,
+                value_key="billed_amount",
             )
 
         if "water" in data:
@@ -120,6 +151,29 @@ class MudDataUpdateCoordinator(
                 unit_class=VolumeConverter.UNIT_CLASS,
             )
 
+            self._import_utility_history(
+                utility="water cost",
+                history=data["water"]["history"],
+                statistic_id=WATER_COST_STATISTIC_ID,
+                name="MUD Utilities Water Cost",
+                unit=self._currency(data["water"]["history"]),
+                unit_class=None,
+                value_key="billed_amount",
+            )
+
+    @staticmethod
+    def _currency(
+        history: list[dict[str, Any]],
+    ) -> str:
+        """Return the billing currency reported by M.U.D."""
+        for record in history:
+            currency = record.get("currency")
+
+            if isinstance(currency, str) and currency.strip():
+                return currency.strip()
+
+        return DEFAULT_CURRENCY
+
     def _import_utility_history(
         self,
         *,
@@ -129,8 +183,14 @@ class MudDataUpdateCoordinator(
         name: str,
         unit: str,
         unit_class: str | None,
+        factor: float = 1.0,
+        value_key: str = "consumption",
     ) -> None:
-        """Import one utility's billing-cycle records."""
+        """Import one utility's billing-cycle records.
+
+        ``value_key`` selects the record field to import (consumption or
+        billed amount). ``factor`` converts that value into ``unit``.
+        """
         metadata = StatisticMetaData(
             mean_type=StatisticMeanType.NONE,
             has_sum=True,
@@ -149,7 +209,7 @@ class MudDataUpdateCoordinator(
 
         for record in history:
             value = record.get(
-                "consumption"
+                value_key
             )
 
             timestamp = (
@@ -172,7 +232,7 @@ class MudDataUpdateCoordinator(
                 microsecond=0,
             )
 
-            value = float(value)
+            value = float(value) * factor
 
             cumulative_sum += value
 

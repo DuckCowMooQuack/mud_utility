@@ -12,3 +12,9 @@ CONF_UPDATE_INTERVAL_HOURS = "update_interval_hours"
 DEFAULT_UPDATE_INTERVAL_HOURS = 24
 MIN_UPDATE_INTERVAL_HOURS = 1
 MAX_UPDATE_INTERVAL_HOURS = 720
+
+# M.U.D. reports gas in therms ("TH"), which the Energy Dashboard cannot use.
+# Gas measured as energy is accepted, so gas statistics are converted to kWh.
+# 1 therm (U.S.) = 1.054804e8 J (NIST SP 811) and 1 kWh = 3.6e6 J. This is the
+# same definition Home Assistant uses for its own "thm" unit.
+THERM_TO_KWH = 1.054804e8 / 3.6e6
